@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:PairedCapture.xcodeproj">
+      location = "self:/Users/agnomen/Documents/workspace/git/depthsperite/Depthsperite.xcodeproj">
    </FileRef>
 </Workspace>
