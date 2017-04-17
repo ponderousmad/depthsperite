@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		783C7B251EA4F967000000DE /* UIDepthScaleGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783C7B241EA4F967000000DE /* UIDepthScaleGestureRecognizer.swift */; };
 		7851A6B71C4943D300EEB9E0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7851A6B61C4943D300EEB9E0 /* AppDelegate.swift */; };
 		7851A6B91C4943D300EEB9E0 /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7851A6B81C4943D300EEB9E0 /* RootViewController.swift */; };
 		7851A6BB1C4943D300EEB9E0 /* DataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7851A6BA1C4943D300EEB9E0 /* DataViewController.swift */; };
@@ -50,7 +49,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		783C7B241EA4F967000000DE /* UIDepthScaleGestureRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIDepthScaleGestureRecognizer.swift; sourceTree = "<group>"; };
 		7851A6B31C4943D300EEB9E0 /* Depthsperite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Depthsperite.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7851A6B61C4943D300EEB9E0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7851A6B81C4943D300EEB9E0 /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
@@ -143,7 +141,6 @@
 				7851A6F81C49E60700EEB9E0 /* Depthsperite-Bridging-Header.h */,
 				7851A6FF1C49E6D200EEB9E0 /* StructureSensor.swift */,
 				7851A7041C4B2B3200EEB9E0 /* CaptureViewController.swift */,
-				783C7B241EA4F967000000DE /* UIDepthScaleGestureRecognizer.swift */,
 			);
 			name = Desperite;
 			path = Depthsperite;
@@ -317,7 +314,6 @@
 				7851A6B91C4943D300EEB9E0 /* RootViewController.swift in Sources */,
 				7851A7051C4B2B3200EEB9E0 /* CaptureViewController.swift in Sources */,
 				7851A7001C49E6D200EEB9E0 /* StructureSensor.swift in Sources */,
-				783C7B251EA4F967000000DE /* UIDepthScaleGestureRecognizer.swift in Sources */,
 				7851A6BD1C4943D300EEB9E0 /* ModelController.swift in Sources */,
 				7851A6BB1C4943D300EEB9E0 /* DataViewController.swift in Sources */,
 				7851A6B71C4943D300EEB9E0 /* AppDelegate.swift in Sources */,
