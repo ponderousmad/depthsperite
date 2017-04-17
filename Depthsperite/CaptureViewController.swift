@@ -22,10 +22,10 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
     @IBOutlet weak var statsLabel: UILabel!
     @IBOutlet weak var captureCountLabel: UILabel!
     @IBOutlet weak var statusLabel: UILabel!
-    @IBOutlet weak var attitudeLabel: UILabel!
     @IBOutlet weak var statusHistory: UILabel!
     var sensor : StructureSensor?
     var captureCount = 0
+    var attitudeText = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,9 +34,6 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
         statusHistory.lineBreakMode = .byWordWrapping
         statusHistory.numberOfLines = 0
         statusHistory.isHidden = true
-        
-        attitudeLabel.lineBreakMode = .byWordWrapping
-        attitudeLabel.numberOfLines = 0
         
         sensor = StructureSensor(observer: self);
         
@@ -99,7 +96,8 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
     }
     
     func captureStats(_ centerDepth: Float) {
-        statsLabel.text = "\(centerDepth / 1000.0) m"
+        statsLabel.text = "\(centerDepth / 1000.0) m" +
+            (attitudeText.isEmpty ? "" : ", " + attitudeText)
     }
     
     func captureAttitude(_ attitude: CMAttitude) {
@@ -107,14 +105,7 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
         let roll = attitude.roll * toDegrees
         let pitch = attitude.pitch * toDegrees
         let yaw = attitude.yaw * toDegrees
-        let q = attitude.quaternion
-        let m = attitude.rotationMatrix
-        var text = "Roll: \(roll.out())\nPitch: \(pitch.out())\nYaw: \(yaw.out())\n"
-        text += "Quaternion: \(q.x.out()), \(q.y.out()), \(q.z.out()), \(q.w.out())\n"
-        text += "\(m.m11.out()), \(m.m12.out()), \(m.m13.out())\n"
-        text += "\(m.m21.out()), \(m.m22.out()), \(m.m23.out())\n"
-        text += "\(m.m31.out()), \(m.m32.out()), \(m.m33.out())\n"
-        attitudeLabel.text = text
+        attitudeText = "Roll: \(roll.out())\nPitch: \(pitch.out())\nYaw: \(yaw.out())\n"
     }
     
     func saveComplete() {
