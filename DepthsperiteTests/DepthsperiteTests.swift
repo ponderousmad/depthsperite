@@ -7,9 +7,9 @@
 //
 
 import XCTest
-@testable import PairedCapture
+@testable import Desperite
 
-class PairedCaptureTests: XCTestCase {
+class DesperiteTests: XCTestCase {
     
     override func setUp() {
         super.setUp()

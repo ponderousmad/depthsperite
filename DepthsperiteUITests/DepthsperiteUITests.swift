@@ -8,7 +8,7 @@
 
 import XCTest
 
-class PairedCaptureUITests: XCTestCase {
+class DesperiteUITests: XCTestCase {
         
     override func setUp() {
         super.setUp()
