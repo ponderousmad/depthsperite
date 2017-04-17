@@ -42,6 +42,21 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
     let quadRes : [Int32] = [2560, 1920]
     var captureRes = CaptureRes.quad;
     
+    public static let maxValidDepth : Float = 10000
+    
+    var depthMin : Float = 0
+    var depthMax : Float = maxValidDepth
+    
+    var depthRangeMin : Float {
+        get { return depthMin; }
+        set { depthMin = max(0.0, min(depthMax, newValue)) }
+    }
+    
+    var depthRangeMax : Float {
+        get { return depthMax }
+        set { depthMax = min(StructureSensor.maxValidDepth, max(depthMin, newValue)) }
+    }
+    
     init(observer: SensorObserverDelegate!) {
         controller = STSensorController.shared()
         sensorObserver = observer
@@ -394,60 +409,28 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
     func renderDepthInMillimeters(_ depthFrame : STDepthFrame!) -> UIImage? {
         let byteMax = UInt8(255)
         let channels = 4
-        let channelMax = 8 // Maximum value to encode in blue/green channels.
-        let maxRedValue = byteMax - UInt8(channelMax) // Maximum value to encode in red channel.
-        let channelsMax = channelMax * channelMax // Max encoded across blue/green
-        let maxDepthValue = Float(maxRedValue) * Float(channelsMax) // Max encoded across all channels.
         var totalSize = depthFrame.width * depthFrame.height
         if captureRes == CaptureRes.full {
             let width = highRes[0]
             let rows = Int32(ceil(Float(totalSize) / Float(width)))
             totalSize = width * rows;
         }
-        var offset = 0
         var imageData = [UInt8](repeating: byteMax, count: Int(totalSize) * channels)
         
-        if let orientation = attitude?.quaternion {
-            // Pixel 0 is red to signify presense of orientation.
-            offset += setPixel(&imageData, offset: offset * channels, r: byteMax, g: 0, b: 0, a: byteMax)
-            // Pixel 1 encodes orientation as a quaternion.
-            offset += setPixel(&imageData, offset: offset * channels,
-                               r: unitValueToByte(orientation.x, max: byteMax),
-                               g: unitValueToByte(orientation.y, max: byteMax),
-                               b: unitValueToByte(orientation.z, max: byteMax),
-                               a: unitValueToByte(orientation.w, max: byteMax)
-            )
-            
-            // Pixel 2 is red to signify presense of additional encodings
-            offset += setPixel(&imageData, offset: offset * channels, r: byteMax, g: 0, b: 0, a: byteMax)
-            // Pixel 3 encodes roll/pitch/yaw
-            offset += setPixel(&imageData, offset: offset * channels,
-                               r: unitValueToByte(attitude!.roll  / Double.pi, max: byteMax),
-                               g: unitValueToByte(attitude!.pitch / Double.pi, max: byteMax),
-                               b: unitValueToByte(attitude!.yaw   / Double.pi, max: byteMax),
-                               a: byteMax
-            )
-            // Pixels 4, 5 & 6 encode rotation matrix
-            let matrix = attitude!.rotationMatrix
-            offset += setPixel(&imageData, offset: offset * channels,
-                               r: unitValueToByte(matrix.m11, max: byteMax),
-                               g: unitValueToByte(matrix.m12, max: byteMax),
-                               b: unitValueToByte(matrix.m13, max: byteMax),
-                               a: byteMax
-            )
-            offset += setPixel(&imageData, offset: offset * channels,
-                               r: unitValueToByte(matrix.m21, max: byteMax),
-                               g: unitValueToByte(matrix.m22, max: byteMax),
-                               b: unitValueToByte(matrix.m23, max: byteMax),
-                               a: byteMax
-            )
-            offset += setPixel(&imageData, offset: offset * channels,
-                               r: unitValueToByte(matrix.m31, max: byteMax),
-                               g: unitValueToByte(matrix.m32, max: byteMax),
-                               b: unitValueToByte(matrix.m33, max: byteMax),
-                               a: byteMax
-            )
-        }
+        var offset = 0;
+        let depthRange = depthMax - depthMin;
+        
+        // Indicate range encoding present
+        offset = setPixel(&imageData, offset: offset, r: 0, g: byteMax, b: byteMax, a: byteMax)
+        let channelRange = 100
+        var rangeSize = Int(depthRange)
+        let rangeLow = rangeSize % channelRange
+        rangeSize = rangeSize / channelRange
+        let rangeMid = rangeSize % channelRange
+        rangeSize = rangeSize / channelRange
+        let rangeHigh = rangeSize % 100
+        offset = setPixel(&imageData, offset: offset, r: UInt8(rangeLow), g: UInt8(rangeMid), b: UInt8(rangeHigh), a: byteMax)
+        
         
         for i in offset ..< Int(depthFrame.width * depthFrame.height) {
             var value : Float
@@ -463,17 +446,18 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
                 imageData[i * channels + 1] = 0
                 imageData[i * channels + 2] = 0
             } else {
-                // Encode depth as integer between 0 to approx 2^14
-                // White is close, and make the pixels 'almost' greyscale so
-                // that you can get a rough idea of depth by eye.
-                let depth = Int(max(0, min(value.isNaN ? 0 : value, maxDepthValue)))
-                let red = maxRedValue - UInt8(depth / channelsMax) // approx 8 bits in red
-                let low = depth % channelsMax // Lower 6 bits, of which
-                let green = red + UInt8(low / channelMax) // three bits go in green
-                let blue = red + UInt8(low % channelMax) // and three bits in blue.
-                imageData[i * channels + 0] = red
-                imageData[i * channels + 1] = green
-                imageData[i * channels + 2] = blue
+                // Encode depth as greyscale value, with NaN as transparent white
+                if value.isNaN {
+                    imageData[i * channels + 3] = 0
+                } else {
+                    let fromMin = max(0, value - depthMax)
+                    let scaled = Double(min(1, fromMin / depthRange))
+                    let d = unitValueToByte(scaled, max: byteMax)
+                    
+                    imageData[i * channels + 0] = d
+                    imageData[i * channels + 1] = d
+                    imageData[i * channels + 2] = d
+                }
             }
         }
         

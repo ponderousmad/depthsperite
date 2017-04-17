@@ -27,6 +27,10 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
     var captureCount = 0
     var attitudeText = ""
     
+    var lastMinPan : Float = 0
+    var lastMaxPan : Float = 0
+    let velocityScale : Float = 0.1
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -96,7 +100,14 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
     }
     
     func captureStats(_ centerDepth: Float) {
-        statsLabel.text = "\(centerDepth / 1000.0) m" +
+        let mm2m : Float = 0.001
+        var min : Float = 0
+        var max : Float = StructureSensor.maxValidDepth
+        if let s = sensor {
+            min = s.depthMin * mm2m
+            max = s.depthMax * mm2m
+        }
+        statsLabel.text = "\(centerDepth * mm2m) m [\(min), \(max)" +
             (attitudeText.isEmpty ? "" : ", " + attitudeText)
     }
     
@@ -105,7 +116,7 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
         let roll = attitude.roll * toDegrees
         let pitch = attitude.pitch * toDegrees
         let yaw = attitude.yaw * toDegrees
-        attitudeText = "Roll: \(roll.out())\nPitch: \(pitch.out())\nYaw: \(yaw.out())\n"
+        attitudeText = "Roll: \(roll.out()), Pitch: \(pitch.out()), Yaw: \(yaw.out())"
     }
     
     func saveComplete() {
@@ -115,5 +126,24 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
     
     @IBAction func saveCapture(_ sender: AnyObject) {
         sensor?.saveNext()
+    }
+    
+    @IBAction func depthMaxPan(_ sender: UIPanGestureRecognizer) {
+        let panLoc = Float(sender.location(in: sender.view).y)
+        if sender.state == UIGestureRecognizerState.changed {
+            let velocity = Float(abs(sender.velocity(in: sender.view).y))
+            sensor?.depthRangeMax += (lastMinPan - panLoc) * velocity * velocityScale
+        }
+        lastMinPan = panLoc
+        
+    }
+    
+    @IBAction func depthMinPan(_ sender: UIPanGestureRecognizer) {
+        let panLoc = Float(sender.location(in: sender.view).y)
+        if sender.state == UIGestureRecognizerState.changed {
+            let velocity = Float(abs(sender.velocity(in: sender.view).y))
+            sensor?.depthRangeMin += (lastMaxPan - panLoc) * velocity * velocityScale
+        }
+        lastMaxPan = panLoc
     }
 }

@@ -84,7 +84,8 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Syu-Te-fTr">
-                                <rect key="frame" x="0.0" y="0.0" width="768" height="512.5"/>
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="513"/>
+                                <gestureRecognizers/>
                             </imageView>
                             <label opaque="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Status" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h52-Kk-Chz">
                                 <rect key="frame" x="359" y="28" width="50" height="21"/>
@@ -135,12 +136,35 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1NE-zC-ndn" userLabel="Min Depth Scale">
+                                <rect key="frame" x="0.0" y="0.0" width="75" height="1024"/>
+                                <gestureRecognizers/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="75" id="Xl4-aU-koU"/>
+                                </constraints>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="bdh-KW-gEU" appends="YES" id="TZK-ag-0rE"/>
+                                </connections>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Eqk-yl-qgY" userLabel="Max Depth Scale">
+                                <rect key="frame" x="693" y="0.0" width="75" height="916"/>
+                                <gestureRecognizers/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="75" id="KcJ-l1-cT8"/>
+                                </constraints>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="nQX-je-Kah" appends="YES" id="aY4-FB-ft7"/>
+                                </connections>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="4K9-Km-r2f" firstAttribute="top" secondItem="LnZ-7P-arc" secondAttribute="bottom" constant="20" id="31V-GQ-9cw"/>
                             <constraint firstItem="h52-Kk-Chz" firstAttribute="top" secondItem="7D0-sN-koJ" secondAttribute="bottom" constant="8" id="43W-mo-wDF"/>
+                            <constraint firstItem="1NE-zC-ndn" firstAttribute="top" secondItem="xdi-gP-eLK" secondAttribute="topMargin" id="6AZ-gq-7uL"/>
                             <constraint firstItem="BbL-O3-ZOM" firstAttribute="top" secondItem="h52-Kk-Chz" secondAttribute="bottom" constant="8" id="G2E-nb-79Z"/>
+                            <constraint firstItem="Eqk-yl-qgY" firstAttribute="trailing" secondItem="GFi-uO-uXr" secondAttribute="trailing" id="HRS-7l-ub1"/>
                             <constraint firstItem="Syu-Te-fTr" firstAttribute="leading" secondItem="xdi-gP-eLK" secondAttribute="leadingMargin" constant="-20" id="IVp-uk-aHw"/>
                             <constraint firstItem="GFi-uO-uXr" firstAttribute="trailing" secondItem="xdi-gP-eLK" secondAttribute="trailingMargin" constant="20" id="JiZ-fi-2q2"/>
                             <constraint firstItem="4K9-Km-r2f" firstAttribute="top" secondItem="GFi-uO-uXr" secondAttribute="bottom" id="NlZ-jB-6cx"/>
@@ -148,15 +172,19 @@
                             <constraint firstItem="6VW-0m-gaY" firstAttribute="trailing" secondItem="xdi-gP-eLK" secondAttribute="trailingMargin" constant="20" id="Tvu-aU-ApU"/>
                             <constraint firstItem="E83-MR-T7v" firstAttribute="centerX" secondItem="xdi-gP-eLK" secondAttribute="centerX" id="Uex-ud-BIx"/>
                             <constraint firstItem="Syu-Te-fTr" firstAttribute="trailing" secondItem="xdi-gP-eLK" secondAttribute="trailingMargin" constant="20" id="VTe-Gm-e2N"/>
+                            <constraint firstItem="GFi-uO-uXr" firstAttribute="top" secondItem="Eqk-yl-qgY" secondAttribute="bottom" constant="8" id="Vck-Bj-XUv"/>
                             <constraint firstItem="4K9-Km-r2f" firstAttribute="top" secondItem="6VW-0m-gaY" secondAttribute="bottom" id="Wxy-oM-DdE"/>
                             <constraint firstItem="h52-Kk-Chz" firstAttribute="centerX" secondItem="xdi-gP-eLK" secondAttribute="centerX" id="XX1-Rk-tvL"/>
                             <constraint firstItem="6VW-0m-gaY" firstAttribute="leading" secondItem="xdi-gP-eLK" secondAttribute="leadingMargin" constant="-20" id="YJW-Rl-pM3"/>
                             <constraint firstItem="Syu-Te-fTr" firstAttribute="top" secondItem="xdi-gP-eLK" secondAttribute="topMargin" id="aXR-Tq-yE3"/>
                             <constraint firstItem="LnZ-7P-arc" firstAttribute="leading" secondItem="xdi-gP-eLK" secondAttribute="leadingMargin" id="bb7-6J-G0b"/>
-                            <constraint firstItem="Syu-Te-fTr" firstAttribute="bottom" secondItem="E83-MR-T7v" secondAttribute="centerY" id="iJN-g1-ZeR"/>
+                            <constraint firstItem="1NE-zC-ndn" firstAttribute="leading" secondItem="xdi-gP-eLK" secondAttribute="leadingMargin" constant="-20" id="cDR-py-4EU"/>
+                            <constraint firstItem="Syu-Te-fTr" firstAttribute="bottom" secondItem="E83-MR-T7v" secondAttribute="centerY" constant="1" id="iJN-g1-ZeR"/>
                             <constraint firstItem="6VW-0m-gaY" firstAttribute="top" secondItem="E83-MR-T7v" secondAttribute="centerY" id="iXP-Cp-oAn"/>
                             <constraint firstItem="s3D-aE-tCc" firstAttribute="bottom" secondItem="LnZ-7P-arc" secondAttribute="top" constant="-8" id="lbm-Tn-FY0"/>
                             <constraint firstItem="E83-MR-T7v" firstAttribute="centerY" secondItem="xdi-gP-eLK" secondAttribute="centerY" id="pqE-mG-mdE"/>
+                            <constraint firstItem="4K9-Km-r2f" firstAttribute="top" secondItem="1NE-zC-ndn" secondAttribute="bottom" id="rde-y6-FoT"/>
+                            <constraint firstItem="Eqk-yl-qgY" firstAttribute="top" secondItem="xdi-gP-eLK" secondAttribute="topMargin" id="tnk-6C-OaS"/>
                             <constraint firstItem="BbL-O3-ZOM" firstAttribute="centerX" secondItem="Syu-Te-fTr" secondAttribute="centerX" id="vrX-e3-tol"/>
                         </constraints>
                     </view>
@@ -170,8 +198,18 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hau-gf-Mzj" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="bdh-KW-gEU">
+                    <connections>
+                        <action selector="depthMinPan:" destination="Qur-L2-huO" id="BTq-Z3-tOe"/>
+                    </connections>
+                </panGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="nQX-je-Kah">
+                    <connections>
+                        <action selector="depthMaxPan:" destination="Qur-L2-huO" id="gfI-3g-a7N"/>
+                    </connections>
+                </panGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="1272" y="-243"/>
+            <point key="canvasLocation" x="1271.875" y="-243.16406249999997"/>
         </scene>
     </scenes>
 </document>
