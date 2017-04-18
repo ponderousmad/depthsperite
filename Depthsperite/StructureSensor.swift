@@ -338,16 +338,11 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         let size : Int = (Int)(depthFrame.width * depthFrame.height)
         let buffer = UnsafeMutableBufferPointer<Float>(start: depthFrame.depthInMillimeters, count: size)
         prevDepth.append(Array(buffer))
-        if let renderer = toRGBA {
-            updateStatus("Showing Depth \(depthFrame.width)x\(depthFrame.height)");
-            let pixels = renderer.convertDepthFrame(toRgba: depthFrame)
-            if let image = imageFromPixels(pixels!, width: Int(renderer.width), height: Int(renderer.height)) {
-                self.sensorObserver.captureDepth(image)
-            }
-            
-            let offset = Int((depthFrame.height * (depthFrame.width + 1)) / 2)
-            self.sensorObserver.captureStats(depthFrame.depthInMillimeters[offset])
-        }
+        updateStatus("Showing Depth \(depthFrame.width)x\(depthFrame.height)");
+        self.sensorObserver.captureDepth(renderDepthInMillimeters(depthFrame))
+        
+        let offset = Int((depthFrame.height * (depthFrame.width + 1)) / 2)
+        self.sensorObserver.captureStats(depthFrame.depthInMillimeters[offset])
     }
     
     func forgetDepth() {
@@ -433,25 +428,38 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         
         
         for i in offset ..< Int(depthFrame.width * depthFrame.height) {
-            var value : Float
-            var prevFrame = prevDepth.count - 1
-            repeat {
-                value = prevDepth[prevFrame][i]
-                prevFrame -= 1
-            } while(value.isNaN && prevFrame >= 0)
+            var value : Float = 0
+            var count = 0
+            for frame in prevDepth {
+                let frameDepth = frame[i]
+                if !frameDepth.isNaN {
+                    value += frameDepth
+                    count += 1
+                }
+            }
             
-            if value.isNaN {
+            if count == 0 {
                 // Pure  black encodes unknown value.
                 imageData[i * channels + 0] = 0
                 imageData[i * channels + 1] = 0
                 imageData[i * channels + 2] = 0
+                imageData[i * channels + 3] = 0
             } else {
-                // Encode depth as greyscale value, with NaN as transparent white
-                if value.isNaN {
+                value /= Float(count)
+                // Encode depth as greyscale value
+                if value < depthMin {
+                    // Alpha blue for far values
+                    imageData[i * channels + 0] = 0
+                    imageData[i * channels + 1] = 0
+                    imageData[i * channels + 3] = 0
+                } else if depthMax < value {
+                    // Alpha green for near values
+                    imageData[i * channels + 0] = 0
+                    imageData[i * channels + 2] = 0
                     imageData[i * channels + 3] = 0
                 } else {
-                    let fromMin = max(0, value - depthMax)
-                    let scaled = Double(min(1, fromMin / depthRange))
+                    let fromMin = max(0, value - depthMin)
+                    let scaled = 1 - Double(min(1, fromMin / depthRange))
                     let d = unitValueToByte(scaled, max: byteMax)
                     
                     imageData[i * channels + 0] = d
