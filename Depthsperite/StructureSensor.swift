@@ -42,14 +42,15 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
     let quadRes : [Int32] = [2560, 1920]
     var captureRes = CaptureRes.single;
     
-    public static let maxValidDepth : Float = 10000
+    public static let minValidDepth : Float = 450
+    public static let maxValidDepth : Float = 1000
     
-    var depthMin : Float = 0
+    var depthMin : Float = minValidDepth
     var depthMax : Float = maxValidDepth
     
     var depthRangeMin : Float {
         get { return depthMin; }
-        set { depthMin = max(0.0, min(depthMax, newValue)) }
+        set { depthMin = max(StructureSensor.minValidDepth, min(depthMax, newValue)) }
     }
     
     var depthRangeMax : Float {
