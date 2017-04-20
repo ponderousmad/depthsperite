@@ -35,12 +35,12 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
     let motionManager = CMMotionManager()
     var attitude : CMAttitude?
     var prevDepth : [[Float]] = []
-    let prevCount = 5
+    let prevCount = 10
     let highRes : [Int32] = [2592, 1936]
     let baseRes : [Int32] = [640, 480]
     let doubleRes : [Int32] = [1280, 960]
     let quadRes : [Int32] = [2560, 1920]
-    var captureRes = CaptureRes.quad;
+    var captureRes = CaptureRes.single;
     
     public static let maxValidDepth : Float = 10000
     
@@ -186,7 +186,11 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
             
             device.setFocusModeLockedWithLensPosition(1.0, completionHandler: nil)
             
-            let res = captureRes == CaptureRes.single && !forCapture ?  baseRes : highRes;
+            var res = baseRes
+            if forCapture && captureRes != CaptureRes.single {
+                res = highRes
+            }
+            
             if selectCaptureFormat(device, width: res[0], height: res[1]) {
                 updateStatus("Capture format set")
             } else {
@@ -393,12 +397,14 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         return (Double(v) / Double(max) * 2) - 1
     }
     
-    func setPixel(_ image : inout [UInt8], offset : Int, r : UInt8, g : UInt8, b : UInt8, a : UInt8) -> Int {
+    @discardableResult
+    func setPixel(_ image : inout [UInt8], pixel : Int, r : UInt8, g : UInt8, b : UInt8, a : UInt8) -> Int {
+        let offset = 4 * pixel
         image[offset + 0] = r
         image[offset + 1] = g
         image[offset + 2] = b
         image[offset + 3] = a
-        return 1
+        return pixel + 1
     }
     
     func renderDepthInMillimeters(_ depthFrame : STDepthFrame!) -> UIImage? {
@@ -416,7 +422,7 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         let depthRange = depthMax - depthMin;
         
         // Indicate range encoding present
-        offset = setPixel(&imageData, offset: offset, r: 0, g: byteMax, b: byteMax, a: byteMax)
+        offset = setPixel(&imageData, pixel: offset, r: 0, g: byteMax, b: byteMax, a: byteMax)
         let channelRange = 100
         var rangeSize = Int(depthRange)
         let rangeLow = rangeSize % channelRange
@@ -424,8 +430,19 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         let rangeMid = rangeSize % channelRange
         rangeSize = rangeSize / channelRange
         let rangeHigh = rangeSize % 100
-        offset = setPixel(&imageData, offset: offset, r: UInt8(rangeLow), g: UInt8(rangeMid), b: UInt8(rangeHigh), a: byteMax)
+        offset = setPixel(&imageData, pixel: offset, r: UInt8(rangeLow), g: UInt8(rangeMid), b: UInt8(rangeHigh), a: byteMax)
         
+        let calibrateGamma = true
+        if (calibrateGamma) {
+            // Signal calibration row present
+            offset = setPixel(&imageData, pixel: offset, r: byteMax, g: 0, b : byteMax, a: byteMax)
+            for _ in offset ..< Int(depthFrame.width) {
+                offset = setPixel(&imageData, pixel: offset, r: 0, g: 0, b: 0, a: byteMax)
+            }
+            for grey : UInt8 in 0 ... byteMax {
+                offset = setPixel(&imageData, pixel: offset, r: grey, g: grey, b : grey, a: byteMax)
+            }
+        }
         
         for i in offset ..< Int(depthFrame.width * depthFrame.height) {
             var value : Float = 0
@@ -440,23 +457,16 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
             
             if count == 0 {
                 // Pure  black encodes unknown value.
-                imageData[i * channels + 0] = 0
-                imageData[i * channels + 1] = 0
-                imageData[i * channels + 2] = 0
-                imageData[i * channels + 3] = 0
+                setPixel(&imageData, pixel: i, r: 0, g: 0, b: 0, a: 0)
             } else {
                 value /= Float(count)
                 // Encode depth as greyscale value
                 if value < depthMin {
                     // Alpha blue for far values
-                    imageData[i * channels + 0] = 0
-                    imageData[i * channels + 1] = 0
-                    imageData[i * channels + 3] = 0
+                    setPixel(&imageData, pixel: i, r: 0, g: 0, b: byteMax, a: 0)
                 } else if depthMax < value {
                     // Alpha green for near values
-                    imageData[i * channels + 0] = 0
-                    imageData[i * channels + 2] = 0
-                    imageData[i * channels + 3] = 0
+                    setPixel(&imageData, pixel: i, r: 0, g: byteMax, b: 0, a: 0)
                 } else {
                     let fromMin = max(0, value - depthMin)
                     let scaled = 1 - Double(min(1, fromMin / depthRange))
@@ -477,7 +487,9 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
     
     func saveNext() {
         saveNextCapture = true
-        configureCamera(true)
+        if captureRes != CaptureRes.single {
+            configureCamera(true)
+        }
     }
     
     func save(_ depthFrame: STDepthFrame!, color: UIImage!) {
@@ -511,6 +523,8 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
             }
         }
         saveNextCapture = false
-        configureCamera(false)
+        if captureRes != CaptureRes.single {
+            configureCamera(false)
+        }
     }
 }
