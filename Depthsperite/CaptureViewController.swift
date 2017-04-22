@@ -11,7 +11,7 @@ import Foundation
 
 extension Double {
     func out() -> String {
-        return String(format: "%+.4f", self)
+        return String(format: "%+.1f", self)
     }
 }
 
@@ -104,10 +104,10 @@ class CaptureViewController: UIViewController, SensorObserverDelegate {
         var min : Float = 0
         var max : Float = StructureSensor.maxValidDepth
         if let s = sensor {
-            min = s.depthMin * mm2m
-            max = s.depthMax * mm2m
+            min = round(s.depthMin) * mm2m
+            max = round(s.depthMax) * mm2m
         }
-        statsLabel.text = "\(centerDepth * mm2m) m [\(min), \(max)" +
+        statsLabel.text = "\(round(centerDepth) * mm2m) m [\(min), \(max)]" +
             (attitudeText.isEmpty ? "" : ", " + attitudeText)
     }
     

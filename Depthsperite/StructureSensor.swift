@@ -390,12 +390,8 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         return UIImage(cgImage: image!)
     }
     
-    func unitValueToByte(_ v : Double, max : UInt8) -> UInt8 {
-        return UInt8(Double(max) * (v + 1) / 2)
-    }
-    
-    func byteToUnitValue(_ v : UInt8, max : UInt8) -> Double {
-        return (Double(v) / Double(max) * 2) - 1
+    func fractionToByte(_ v : Double, max : UInt8) -> UInt8 {
+        return UInt8(Double(max) * v)
     }
     
     @discardableResult
@@ -420,7 +416,8 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         var imageData = [UInt8](repeating: byteMax, count: Int(totalSize) * channels)
         
         var offset = 0;
-        let depthRange = depthMax - depthMin;
+        let depthStart = round(depthMin)
+        let depthRange = round(depthMax) - depthStart;
         
         // Indicate range encoding present
         offset = setPixel(&imageData, pixel: offset, r: 0, g: byteMax, b: byteMax, a: byteMax)
@@ -457,21 +454,24 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
             }
             
             if count == 0 {
-                // Pure  black encodes unknown value.
-                setPixel(&imageData, pixel: i, r: 0, g: 0, b: 0, a: 0)
+                // dark red encodes unknown value.
+                setPixel(&imageData, pixel: i, r: 63, g: 0, b: 0, a: 0)
             } else {
                 value /= Float(count)
                 // Encode depth as greyscale value
                 if value < depthMin {
-                    // Alpha blue for far values
-                    setPixel(&imageData, pixel: i, r: 0, g: 0, b: byteMax, a: 0)
+                    // green for near values
+                    let g = 1 + UInt8(127 * value / depthMin)
+                    setPixel(&imageData, pixel: i, r: 0, g: g, b: 0, a: 0)
                 } else if depthMax < value {
-                    // Alpha green for near values
-                    setPixel(&imageData, pixel: i, r: 0, g: byteMax, b: 0, a: 0)
+                    // blue for far values
+                    let d = min(1, (value - depthMax) / 5000)
+                    let b = 1 + UInt8(127 * (1-d))
+                    setPixel(&imageData, pixel: i, r: 0, g: 0, b: b, a: 0)
                 } else {
-                    let fromMin = max(0, value - depthMin)
+                    let fromMin = max(0, value - depthStart)
                     let scaled = 1 - Double(min(1, fromMin / depthRange))
-                    let d = unitValueToByte(scaled, max: byteMax)
+                    let d = fractionToByte(scaled, max: byteMax)
                     
                     imageData[i * channels + 0] = d
                     imageData[i * channels + 1] = d
