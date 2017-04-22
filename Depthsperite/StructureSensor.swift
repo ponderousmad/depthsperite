@@ -404,6 +404,17 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         return pixel + 1
     }
     
+    func encodeValue(_ image : inout [UInt8], pixel: Int, value : Int) -> Int {
+        let channelRange = 100
+        var remaining = value
+        let low = UInt8(remaining % channelRange)
+        remaining /= channelRange
+        let mid = UInt8(remaining % channelRange)
+        remaining = remaining / channelRange
+        let high = UInt8(remaining % channelRange)
+        return setPixel(&image, pixel: pixel, r: low, g: mid, b: high, a: 255)
+    }
+    
     func renderDepthInMillimeters(_ depthFrame : STDepthFrame!) -> UIImage? {
         let byteMax = UInt8(255)
         let channels = 4
@@ -421,14 +432,8 @@ class StructureSensor : NSObject, STSensorControllerDelegate, AVCaptureVideoData
         
         // Indicate range encoding present
         offset = setPixel(&imageData, pixel: offset, r: 0, g: byteMax, b: byteMax, a: byteMax)
-        let channelRange = 100
-        var rangeSize = Int(depthRange)
-        let rangeLow = rangeSize % channelRange
-        rangeSize = rangeSize / channelRange
-        let rangeMid = rangeSize % channelRange
-        rangeSize = rangeSize / channelRange
-        let rangeHigh = rangeSize % 100
-        offset = setPixel(&imageData, pixel: offset, r: UInt8(rangeLow), g: UInt8(rangeMid), b: UInt8(rangeHigh), a: byteMax)
+        offset = encodeValue(&imageData, pixel: offset, value: Int(depthRange))
+        offset = encodeValue(&imageData, pixel: offset, value: Int(depthStart))
         
         let calibrateGamma = true
         if (calibrateGamma) {
